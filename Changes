@@ -1,5 +1,10 @@
 Revision history for HTML-Element-Tiny
 
+0.002   2007-10-28 hdp
+
+        add remove_child
+        use Clone for cloning if available
+
 0.001   2007-10-26 hdp
 
         first draft with documentation and 'complete' functionality

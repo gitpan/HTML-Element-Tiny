@@ -8,6 +8,7 @@ t/001_html.t
 t/002_extending.t
 t/003_collection.t
 t/004_iter.t
+t/005_clone.t
 t/pod-coverage.t
 t/pod.t
 META.yml                                 Module meta-data (added by MakeMaker)

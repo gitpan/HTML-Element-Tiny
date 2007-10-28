@@ -4,8 +4,8 @@ use warnings;
 package HTML::Element::Tiny;
 
 use 5.006;
-our $VERSION = '0.001';
-our $HAS_HTML_ENTITIES;
+our $VERSION = '0.002';
+our %HAS;
 our (@TAGS, %DEFAULT_CLOSED, %DEFAULT_NEWLINE);
 BEGIN {
 #  @TAGS = 
@@ -20,12 +20,24 @@ BEGIN {
     qw( area base br col frame hr img input meta param link );
   %DEFAULT_NEWLINE = map { $_ => 1 }
     qw( html head body div p tr table );
-  $HAS_HTML_ENTITIES = eval "require HTML::Entities; 1"
-    unless defined $HAS_HTML_ENTITIES;
+  our %_modver = (
+    Clone => '0.28',
+  );
+  for my $module (qw(HTML::Entities Clone)) {
+    my $modver = $_modver{$module} || 0;
+    $HAS{$module} = eval "use $module $modver (); 1"
+      unless defined $HAS{$module};
+  }
 }
 
 use Scalar::Util ();
 use Carp ();
+
+#use overload (
+#  q{""} => 'as_string',
+#  q{0+} => sub { Scalar::Util::refaddr($_[0]) },
+#  fallback => 1,
+#);
 
 sub TAG      () { 0 }
 sub ID       () { 1 }
@@ -93,7 +105,7 @@ sub parent   { $_[0]->[ATTR]->{-parent} }
 sub tag      { $_[0]->[TAG] }
 sub id       { $_[0]->[ID] }
 sub class    { join " ", @{$_[0]->[CLASS]} }
-sub classes  { @{$_[0]->[CLASS]} }
+sub classes  { @{$_[0]->[CLASS]} } 
 
 # _match needs to use accessors despite being internal because it may touch
 # non-arrayref subclasses like -Text
@@ -195,7 +207,15 @@ sub attr {
   Carp::croak "invalid argument to attr(): '$arg' (must be hashref or scalar)";
 }
 
-sub clone {
+sub _Clone_clone {
+  my ($self, $extra) = @_;
+  my $clone = Clone::clone($self);
+  delete $clone->[ATTR]->{-parent};
+  $clone->attr($extra) if $extra and %$extra;
+  return $clone;
+}
+
+sub _my_clone {
   my ($self, $extra) = @_;
   my %attr = %{$self->[ATTR]};
   delete $attr{-parent};
@@ -206,9 +226,17 @@ sub clone {
     { %attr, %{$extra || {}} },
     [],
   ] => ref $self;
+  $clone->push($self->children);
+  return $clone;
+}
+
+my $clone_type = sprintf "_%s_clone", (grep { $HAS{$_} } qw(Clone))[0] || 'my';
+sub clone {
+  my ($self, $extra) = @_;
+  my $clone = do { no strict 'refs'; &$clone_type($self, $extra) };
+
   Scalar::Util::weaken($clone->[ATTR]->{-parent})
     if $clone->[ATTR]->{-parent};
-  $clone->push($self->children);
   return $clone;
 }
 
@@ -222,6 +250,31 @@ sub push {
       : ref($self)->new($_, { -parent => $self })
   } @_;
 }
+
+sub remove_child {
+  my $self = shift;
+  my (%idx, %obj);
+  for (@_) {
+    if (Scalar::Util::blessed($_)) {
+      $obj{Scalar::Util::refaddr($_)}++;
+    } else {
+      $idx{$_}++;
+    }
+  }
+  my @children;
+  my @removed;
+  for my $i (0..$#{$self->[CHILDREN]}) {
+    my $child = $self->[CHILDREN]->[$i];
+    if ($idx{$i} or $obj{Scalar::Util::refaddr($child)}) {
+      $child->attr({ -parent => undef });
+      CORE::push @removed, $child;
+    } else {
+      CORE::push @children, $child;
+    }
+  }
+  $self->[CHILDREN] = \@children;
+  return _coll(@removed);
+}   
 
 sub as_HTML {
   my ($self, $arg) = @_;
@@ -246,6 +299,18 @@ sub as_HTML {
   return $str;
 }
 
+=begin maybe_later
+
+sub as_string {
+  my ($self) = @_;
+  my $str = $self->tag;
+  $str .= qq{ id="} . $self->id . q{"} if $self->id;
+  $str .= qq{ class="} . $self->class . q{"} if $self->classes;
+  return "<$str>";
+}
+
+=cut
+
 package HTML::Element::Tiny::Text;
 
 BEGIN { our @ISA = 'HTML::Element::Tiny' }
@@ -259,6 +324,8 @@ sub class    { return }
 sub classes  { return () }
 sub attr     { return ref $_[1] ? $_[0] : (); }
 sub clone    { return $_[0] }
+sub push     { die "unimplemented" }
+sub remove_child { die "unimplemented" }
 
 my %ENT_MAP = (
   '&' => '&amp;',
@@ -338,7 +405,7 @@ HTML::Element::Tiny - lightweight DOM-like elements
 
 =head1 VERSION
 
-Version 0.001
+Version 0.002
 
 =head1 SYNOPSIS
 
@@ -434,6 +501,9 @@ have C<new> called on them as well.
 Return a clone of this element and its descendents, deleting the clone's parent
 (making it a root of its own tree) and adding any extra attributes specified.
 
+Clone (0.28 or later) will be used, if installed.  This is about twice as fast
+as the internal manual clone that HTML::Element::Tiny does.
+
 =head2 iter
 
   my $iter = $elem->iter;
@@ -480,7 +550,6 @@ couldn't find any elements or it found too many.
 
 C<find_iter> returns an iterator of matched elements.  See L</ITERATORS>.
 
-
 =head2 push
 
   $elem->push(@elements, @text, @lists_of_lists);
@@ -490,6 +559,15 @@ Add all arguments to the element's list of children.
 Strings and arrayrefs will be passed through C<new> first.  Objects will be
 cloned if they already have a parent or simply attached if they do not.
 
+=head2 remove_child
+
+  $elem->remove_child(@elements, @indices);
+
+Remove all listed children from the element.  Arguments may either be element
+objects or indices (starting at 0).
+
+Returns a collection of removed children.
+
 =head2 as_HTML
 
   print $tree->as_HTML;
@@ -497,6 +575,18 @@ cloned if they already have a parent or simply attached if they do not.
 Return the element and its descendents as HTML.  If
 L<HTML::Entities|HTML::Entities> is installed, it will be used to escape any
 text nodes; otherwise, minimal entity escaping is done (C<< &<>"' >>).
+
+=begin maybe_later
+
+=head2 as_string
+
+  print "summary of element: $elem";
+
+Return a pseudo-tag description of element, including tag name, id, and class.
+Useful mainly for diagnostics; don't depend too heavily on particulars of this
+format.
+
+=cut
 
 =head1 ITERATORS
 

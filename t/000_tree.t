@@ -47,3 +47,11 @@ $tree->push($p);
 is($tree->find({ -tag => 'p' })->size, 2, "cloned element with parent");
 $tree->push([ p => "new node 3" ]);
 is($tree->find({ -tag => 'p' })->size, 3, "new elem from lol");
+
+is($tree->remove_child($tree->find({ -tag => 'p' }))->size, 3,
+  "removed 3 p tags");
+is($tree->find({ -tag => 'p' })->size, 0, "no p elems left");
+is($p->parent, undef, "removed child's parent is undef");
+is($tree->remove_child(0)->size, 1, "removed 1 child by index");
+is($tree->children, 0, "removed only child");
+is($ul->parent, undef, "removed child's parent is undef");
