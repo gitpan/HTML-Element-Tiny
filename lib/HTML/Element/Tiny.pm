@@ -4,7 +4,7 @@ use warnings;
 package HTML::Element::Tiny;
 
 use 5.006;
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 our %HAS;
 our (@TAGS, %DEFAULT_CLOSED, %DEFAULT_NEWLINE);
 BEGIN {
@@ -299,17 +299,13 @@ sub as_HTML {
   return $str;
 }
 
-=begin maybe_later
-
-sub as_string {
-  my ($self) = @_;
-  my $str = $self->tag;
-  $str .= qq{ id="} . $self->id . q{"} if $self->id;
-  $str .= qq{ class="} . $self->class . q{"} if $self->classes;
-  return "<$str>";
-}
-
-=cut
+#sub as_string {
+#  my ($self) = @_;
+#  my $str = $self->tag;
+#  $str .= qq{ id="} . $self->id . q{"} if $self->id;
+#  $str .= qq{ class="} . $self->class . q{"} if $self->classes;
+#  return "<$str>";
+#}
 
 package HTML::Element::Tiny::Text;
 
@@ -405,7 +401,7 @@ HTML::Element::Tiny - lightweight DOM-like elements
 
 =head1 VERSION
 
-Version 0.002
+Version 0.003
 
 =head1 SYNOPSIS
 
@@ -425,6 +421,9 @@ Version 0.002
 HTML::Element::Tiny is a simple module for dealing with trees of HTML elements,
 including traversing them and manipulating the tree structure and individual
 element attributes, and then for generating HTML.
+
+Though it lives under HTML::, there's no reason that you couldn't use this for
+processing arbitrary XML, maybe with L<XML::Tiny|XML::Tiny> in front of it.
 
 =head1 CAVEATS
 

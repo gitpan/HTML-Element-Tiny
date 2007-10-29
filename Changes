@@ -1,5 +1,10 @@
 Revision history for HTML-Element-Tiny
 
+0.003   2007-10-29 hdp
+
+        fix broken pod
+        note about XML, link to XML::Tiny
+
 0.002   2007-10-28 hdp
 
         add remove_child
