@@ -4,7 +4,7 @@ use warnings;
 package HTML::Element::Tiny;
 
 use 5.006;
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 our %HAS;
 our (@TAGS, %DEFAULT_CLOSED, %DEFAULT_NEWLINE);
 BEGIN {
@@ -401,7 +401,7 @@ HTML::Element::Tiny - lightweight DOM-like elements
 
 =head1 VERSION
 
-Version 0.003
+Version 0.004
 
 =head1 SYNOPSIS
 
@@ -574,18 +574,6 @@ Returns a collection of removed children.
 Return the element and its descendents as HTML.  If
 L<HTML::Entities|HTML::Entities> is installed, it will be used to escape any
 text nodes; otherwise, minimal entity escaping is done (C<< &<>"' >>).
-
-=begin maybe_later
-
-=head2 as_string
-
-  print "summary of element: $elem";
-
-Return a pseudo-tag description of element, including tag name, id, and class.
-Useful mainly for diagnostics; don't depend too heavily on particulars of this
-format.
-
-=cut
 
 =head1 ITERATORS
 
