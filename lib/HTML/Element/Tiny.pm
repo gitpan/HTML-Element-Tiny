@@ -4,7 +4,7 @@ use warnings;
 package HTML::Element::Tiny;
 
 use 5.006;
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 our %HAS;
 our (@TAGS, %DEFAULT_CLOSED, %DEFAULT_NEWLINE);
 BEGIN {
@@ -226,7 +226,7 @@ sub _my_clone {
     { %attr, %{$extra || {}} },
     [],
   ] => ref $self;
-  $clone->push($self->children);
+  $clone->append($self->children);
   return $clone;
 }
 
@@ -240,15 +240,25 @@ sub clone {
   return $clone;
 }
 
-sub push {
+sub _new_children {
   my $self = shift;
-  push @{ $self->[CHILDREN] }, map {
+  return map {
     Scalar::Util::blessed($_)
       ? $_->parent
         ? $_->clone({ -parent => $self })
         : $_->attr({ -parent => $self })
       : ref($self)->new($_, { -parent => $self })
   } @_;
+}
+
+sub prepend {
+  my $self = shift;
+  unshift @{ $self->[CHILDREN] }, $self->_new_children(@_);
+}
+    
+sub append {
+  my $self = shift;
+  push @{ $self->[CHILDREN] }, $self->_new_children(@_);
 }
 
 sub remove_child {
@@ -267,9 +277,9 @@ sub remove_child {
     my $child = $self->[CHILDREN]->[$i];
     if ($idx{$i} or $obj{Scalar::Util::refaddr($child)}) {
       $child->attr({ -parent => undef });
-      CORE::push @removed, $child;
+      push @removed, $child;
     } else {
-      CORE::push @children, $child;
+      push @children, $child;
     }
   }
   $self->[CHILDREN] = \@children;
@@ -320,7 +330,7 @@ sub class    { return }
 sub classes  { return () }
 sub attr     { return ref $_[1] ? $_[0] : (); }
 sub clone    { return $_[0] }
-sub push     { die "unimplemented" }
+sub append   { die "unimplemented" }
 sub remove_child { die "unimplemented" }
 
 my %ENT_MAP = (
@@ -401,7 +411,7 @@ HTML::Element::Tiny - lightweight DOM-like elements
 
 =head1 VERSION
 
-Version 0.004
+Version 0.005
 
 =head1 SYNOPSIS
 
@@ -549,11 +559,14 @@ couldn't find any elements or it found too many.
 
 C<find_iter> returns an iterator of matched elements.  See L</ITERATORS>.
 
-=head2 push
+=head2 prepend
 
-  $elem->push(@elements, @text, @lists_of_lists);
+=head2 append
 
-Add all arguments to the element's list of children.
+  $elem->append(@elements, @text, @lists_of_lists);
+
+Add all arguments to the element's list of children, either at the beginning or
+at the end.
 
 Strings and arrayrefs will be passed through C<new> first.  Objects will be
 cloned if they already have a parent or simply attached if they do not.

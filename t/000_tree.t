@@ -41,11 +41,11 @@ for my $elem ($tree, $div, $ul) {
 
 my $p = HTML::Element::Tiny->new([ p => "new node" ]);
 is($p->parent, undef);
-$tree->push($p);
+$tree->append($p);
 is($p->parent, $tree, "did not clone element without parent");
-$tree->push($p);
+$tree->append($p);
 is($tree->find({ -tag => 'p' })->size, 2, "cloned element with parent");
-$tree->push([ p => "new node 3" ]);
+$tree->prepend([ p => "new node 3" ]);
 is($tree->find({ -tag => 'p' })->size, 3, "new elem from lol");
 
 is($tree->remove_child($tree->find({ -tag => 'p' }))->size, 3,
