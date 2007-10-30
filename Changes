@@ -1,5 +1,9 @@
 Revision history for HTML-Element-Tiny
 
+0.006   2007-10-30 hdp
+
+        support for >= 5.004, minimum version test
+
 0.005   2007-10-29 hdp
 
         add prepend

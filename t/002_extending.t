@@ -1,18 +1,19 @@
 use strict;
-use warnings;
+local $^W = 1;
 use Test::More 'no_plan';
 use HTML::Element::Tiny;
 
 package My::Element;
 
-BEGIN { our @ISA = 'HTML::Element::Tiny' }
+BEGIN { use vars qw(@ISA); @ISA = 'HTML::Element::Tiny' }
 
-our %TAG_CLASS = (
+use vars qw(%TAG_CLASS);
+%TAG_CLASS = (
   a => '-a',
 );
 
 package My::Element::a;
-BEGIN { our @ISA = 'My::Element' }
+BEGIN { use vars qw(@ISA); @ISA = 'My::Element' }
 sub href { @_ > 1 ? shift->attr({ href => shift }) : shift->attr('href') }
 
 package main;

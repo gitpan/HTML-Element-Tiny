@@ -1,5 +1,5 @@
 use strict;
-use warnings;
+local $^W = 1;
 use Test::More 'no_plan';
 use HTML::Element::Tiny;
 
@@ -37,9 +37,9 @@ is_deeply(
 );
 
 eval { $elems->one };
-like $@, qr/not exactly one element/;
+like $@, '/not exactly one element/';
 eval { $elems->filter({ id => "blort" })->one };
-like $@, qr/not exactly one element/;
+like $@, '/not exactly one element/';
 my $one = eval { $elems->filter({ id => "intro" })->one };
 is $@, '', "one didn't die";
 is $one, $elems->[0];

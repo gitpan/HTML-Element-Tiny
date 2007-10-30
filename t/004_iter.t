@@ -1,5 +1,5 @@
 use strict;
-use warnings;
+local $^W = 1;
 use Test::More 'no_plan';
 use HTML::Element::Tiny;
 

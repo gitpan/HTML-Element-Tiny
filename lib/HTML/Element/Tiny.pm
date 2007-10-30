@@ -1,12 +1,11 @@
 use strict;
-use warnings;
+local $^W = 1;
 
 package HTML::Element::Tiny;
 
-use 5.006;
-our $VERSION = '0.005';
-our %HAS;
-our (@TAGS, %DEFAULT_CLOSED, %DEFAULT_NEWLINE);
+use vars qw($VERSION %HAS @TAGS %DEFAULT_CLOSED %DEFAULT_NEWLINE %TAG_CLASS);
+$VERSION = '0.006';
+use 5.004;
 BEGIN {
 #  @TAGS = 
 #      qw( a abbr acronym address area b base bdo big blockquote body br
@@ -20,7 +19,8 @@ BEGIN {
     qw( area base br col frame hr img input meta param link );
   %DEFAULT_NEWLINE = map { $_ => 1 }
     qw( html head body div p tr table );
-  our %_modver = (
+  use vars qw(%_modver);
+  %_modver = (
     Clone => '0.28',
   );
   for my $module (qw(HTML::Entities Clone)) {
@@ -45,7 +45,7 @@ sub CLASS    () { 2 }
 sub ATTR     () { 3 }
 sub CHILDREN () { 4 }
 
-our %TAG_CLASS = (
+%TAG_CLASS = (
   -text    => "-Text",
   -base    => 'HTML::Element::Tiny',
   -default => 'HTML::Element::Tiny',
@@ -319,7 +319,7 @@ sub as_HTML {
 
 package HTML::Element::Tiny::Text;
 
-BEGIN { our @ISA = 'HTML::Element::Tiny' }
+BEGIN { use vars qw(@ISA); @ISA = 'HTML::Element::Tiny' }
 
 sub children { return () } 
 sub _all     { return $_[0] }
@@ -411,7 +411,7 @@ HTML::Element::Tiny - lightweight DOM-like elements
 
 =head1 VERSION
 
-Version 0.005
+Version 0.006
 
 =head1 SYNOPSIS
 
